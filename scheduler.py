@@ -31,16 +31,8 @@ load_dotenv(project_root / ".env")
 # ── Resume של המשתמש ─────────────────────────────────────────────────────────
 RESUME_FILE = project_root / "my_resume.txt"
 
-MY_RESUME = """
-Or Smolarchik — גבעתיים, ישראל
-סטודנט שנה שלישית למדעי המחשב, HIT (מכון טכנולוגי חולון)
-כישורים טכניים: Python, JavaScript, Java, C++, React, Vite, Socket.IO,
-NumPy, OpenCV, TensorFlow, Keras, Git, VS Code, Linux, SQL
-פרויקטים: AI Smart Crosswalk (Computer Vision), Robotics Blackjack,
-Lifeboard (Full-Stack Next.js עם Supabase), מערכות Real-Time עם Socket.IO
-שירות צבאי: קצין לוגיסטיקה וסגן מ"פ, צה"ל 2016–2021
-שפות: עברית (שפת אם), אנגלית (שוטפת)
-"""
+# קורות החיים נטענים מ-my_resume.txt (מחוץ ל-Git). לעולם לא בקוד.
+MY_RESUME = ""
 
 def load_resume() -> str:
     if RESUME_FILE.exists():
@@ -48,8 +40,7 @@ def load_resume() -> str:
         if text:
             print(f"[Scheduler] CV נטען מקובץ: {RESUME_FILE.name}")
             return text
-    print("[Scheduler] משתמש ב-CV ברירת מחדל (צור my_resume.txt לעדכון)")
-    return MY_RESUME.strip()
+    raise SystemExit("[Scheduler] ❌ לא נמצא my_resume.txt — צור אותו בתיקיית הפרויקט עם קורות החיים שלך")
 
 
 # ── הגדרות חיפוש ─────────────────────────────────────────────────────────────
