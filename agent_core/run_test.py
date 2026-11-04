@@ -9,26 +9,9 @@ load_dotenv()
 from agent_core.graph import career_graph
 
 MY_RESUME = """
-Or Smolarchik — Givatayim, Israel
-
-Third-year Computer Science student at HIT, with strong analytical thinking,
-quick learning ability, and a passion for software development.
-Seeking a junior developer role to apply academic knowledge and grow professionally.
-
-Technical Skills:
-Languages: Python, JavaScript, Java, C++
-Web Technologies: React, Vite, Socket.IO, HTML, CSS
-Libraries & Frameworks: NumPy, OpenCV, TensorFlow, Keras
-Tools & Platforms: Git, VS Code, Linux, SQL, Google Colab
-
-Projects:
-- AI Smart Crosswalk: Full-stack AI system with React, Vite, Socket.IO.
-- Computer Vision & Deep Learning: OpenCV, TensorFlow, Keras image processing.
-- Robotics Integration (Blackjack): Python + Dynamixel motors, image recognition.
-- Lifeboard (In Progress): Autonomous AI agents platform using LangGraph and FastAPI.
-
-Military: Logistics Officer & Deputy Company Commander, IDF 2016–2021.
-Languages: Hebrew (Native), English (Excellent)
+Sample Candidate — Tel Aviv, Israel
+Third-year Computer Science student. Seeking a junior developer role.
+Skills: Python, JavaScript, React, SQL, Git. Projects: a full-stack web app (React, Socket.IO) and an image-processing project (OpenCV).
 """
 
 initial_state = {

@@ -276,7 +276,7 @@ export function ProfilePage({ onNavigate }: { onNavigate?: (page: Page) => void 
           </div>
           <div>
             <h1 className="text-xl font-black text-white">Life Builder</h1>
-            <p className="text-sm text-slate-500">or.smolarchik@gmail.com</p>
+            <p className="text-sm text-slate-500">you@example.com</p>
           </div>
         </div>
         {/* Progress */}
