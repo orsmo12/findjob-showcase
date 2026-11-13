@@ -48,7 +48,7 @@ def main(DAYS: int = 14) -> None:
     """מדפיס את הדוח. scripts/nightly.py קורא לזה פעם בשבוע ושומר את הטקסט לכלי המפתח."""
     since = (datetime.now(timezone.utc) - timedelta(days=DAYS)).isoformat()
     users = sorted(db.auth_users(), key=lambda u: u.get("created_at") or "")
-    alias = {u["id"]: ("אור" if i == 0 else f"משתמש {i}") for i, u in enumerate(users)}
+    alias = {u["id"]: f"משתמש #{i}" for i, u in enumerate(users)}
     profs = {p["user_id"]: p for p in get("profiles", select="user_id,answers,state")}
     db_cv = {p["user_id"]: p.get("cv_text") or "" for p in get("profiles", select="user_id,cv_text")}
     runs = get("runs", select="user_id,stats,created_at", agent="eq.hunter", created_at=f"gte.{since}", order="created_at.asc")
@@ -71,6 +71,10 @@ def main(DAYS: int = 14) -> None:
         print(f"   {alias[uid]}: נרשם {str(u.get('created_at'))[:16]} | קו״ח {len(str((db_cv.get(uid) or '')))} תווים | onboarded={st.get('onboarded')} | "
               f"תשובות {len((p.get('answers') or {}))} | ריצות לפי סוכן {dict(ag)} | זיכרונות {len(mem)} | תקלות {len(fails)}"
               + (f" | תקלה אחרונה: {fails[-1].get('where')} {str(fails[-1].get('error'))[:120]}" if fails else ""))
+        br = [r["stats"]["brief_ai"] for r in mine if (r.get("stats") or {}).get("brief_ai")]
+        if br:
+            b = br[-1]
+            print(f"      סיכום יומי ({b.get('how')}): {b.get('headline')} | {len(b.get('items') or [])} נקודות")
         last = [r for r in mine if (r.get("stats") or {}).get("msg")][-3:]
         for r in last:
             print(f"      {r['created_at'][5:16]} {r['agent']}: {str(r['stats']['msg'])[:130]}")
