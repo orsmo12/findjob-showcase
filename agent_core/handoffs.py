@@ -44,7 +44,7 @@ def missing_for_saved(row: dict) -> list[str]:
     return out
 
 
-LETTER_V = 5          # v5: מבנה של מכתב אמיתי (פנייה, פסקאות, חתימה) ובלי השוואות מנופחות. מכתב ישן נכתב מחדש
+LETTER_V = 6          # v6: עורך לפי 6 הכללים מהדוגמאות, פרויקט שני רק כשהוא מכסה דרישה נוספת, מילואים + למידה עצמית. מכתב ישן (במשרה שמורה) נכתב מחדש בהדרגה
 UPGRADES_PER_RUN = 3  # שדרוג הדרגתי: לכל היותר 3 מכתבים ישנים בכל ריצה למשתמש, כדי לא לשרוף מכסה
 
 
@@ -168,3 +168,18 @@ def finish(task: dict, ok: bool = True, result: dict | None = None, note: str = 
         "status": "done" if ok else "failed", "result": result, "done_at": datetime.now(timezone.utc).isoformat()}).raise_for_status()
     if note:
         act.log(task["to_agent"], note, to=task["from_agent"] if task["from_agent"] != task["to_agent"] else None)
+
+
+INACTIVE_DAYS = 3   # מתג (סבב 9): משתמש שלא נכנס 3 ימים — הסוכנים לא מכינים חומרים חדשים עד שיחזור (חוסך מכסה)
+
+
+def active_recently(state: dict | None, days: int = INACTIVE_DAYS) -> bool:
+    """נכנס לאפליקציה ב-N הימים האחרונים. בלי נתוני שימוש (משתמש חדש / ישן) = פעיל."""
+    from datetime import datetime, timezone, timedelta
+    last = ((state or {}).get("usage") or {}).get("last")
+    if not last or not days:
+        return True
+    try:
+        return datetime.fromisoformat(str(last).replace("Z", "+00:00")) >= datetime.now(timezone.utc) - timedelta(days=days)
+    except ValueError:
+        return True

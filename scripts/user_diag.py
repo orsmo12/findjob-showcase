@@ -100,6 +100,8 @@ def main(idx=None, days=10):
     print(f"\nריצות לפי סוכן: {dict(Counter(r['agent'] for r in ag))} | עם תקלות: {dict(fails)}")
     tk = get("agent_tasks", select="kind,status", user_id=f"eq.{uid}", created_at=f"gte.{since}") or []
     print(f"   agent_tasks: {dict(Counter((t.get('kind'), t.get('status')) for t in tk))}")
+    for d, ag in sorted((db.system_memory("budget_hist").get("days") or {}).items())[-7:]:
+        print(f"   טוקנים {d}: " + ", ".join(f"{a} {sum(v.values()):,}" for a, v in sorted(ag.items(), key=lambda x: -sum(x[1].values()))))
     for f in (db.system_memory("budget").get("files") or {}).values():
         d = f if isinstance(f, dict) else {}
         for k, u in (d.get("usage") or {}).items():
@@ -107,8 +109,14 @@ def main(idx=None, days=10):
     # מכתבים: מספרים בלבד (בלי טקסט, הריפו ציבורי)
     import re, statistics
     from agent_core.agents.letter_graph import slop_in
-    lt = [(j.get("letter") or {}) for j in (get("jobs", select="letter,decision", user_id=f"eq.{uid}", letter="not.is.null") or [])]
-    lt = [x for x in lt if x.get("text")]
+    lrows = [j for j in (get("jobs", select="letter,decision", user_id=f"eq.{uid}", letter="not.is.null") or []) if (j.get("letter") or {}).get("text")]
+    lt = [j["letter"] for j in lrows]
+    if lrows:
+        from agent_core.handoffs import LETTER_V
+        print(f"\nמכתבים ישנים (מתחת ל-v{LETTER_V}) לפי החלטה: {dict(Counter(j.get('decision') for j in lrows if (j['letter'].get('v') or 0) < LETTER_V))} (רק שמורות נכתבות מחדש)")
+        sc = [x["score"] for x in lt if x.get("score")]
+        if sc:
+            print(f"   6 הכללים (מכתבים חדשים, {len(sc)}): " + ", ".join(f"{k} {sum(bool(d.get(k)) for d in sc)}/{len(sc)}" for k in sc[0]))
     if lt:
         wc = [len(x["text"].split()) for x in lt]
         paras = [x["text"].strip().split("\n\n") for x in lt]
