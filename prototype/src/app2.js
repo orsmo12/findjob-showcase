@@ -5,7 +5,7 @@ function goPage(id,anchor){
   track('page_'+id);if(id==='jobs'&&queue().length)track('jobs_seen');
   if(typeof offAnimId!=='undefined') cancelAnimationFrame(offAnimId);
   closeDrawer();closeSheet();if(chatOpen)toggleChat();
-  curPg=id;
+  curPg=id;document.body.dataset.pg=id;
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+id));
   document.body.className=(document.body.className.replace(/\bpg-\w+/g,'').trim()+' pg-'+id).trim();
   $('tbTitle').innerHTML=id==='main'?'<span class="wordmark" aria-hidden="true">findjob</span><span class="vh">לוח בקרה</span>':escB(TITLES[id]);
@@ -173,9 +173,10 @@ function renderHome(){
       ${shown.length?shown.map(x=>`<button class="nx" onclick="${x.go}"><span class="ic ${x.c}" aria-hidden="true">${x.ic}</span><span class="tx"><b>${escB(x.b)}</b><span>${escB(x.s)}</span></span>${x.w?`<span class="when ${x.w[1]}">${x.w[0]}</span>`:''}<span class="chev" aria-hidden="true"></span></button>`).join('')
         :'<p style="padding:6px 16px 14px;color:var(--ink2);font-size:14px">אין צעדים פתוחים כרגע. הסוכנים ממשיכים לעבוד ויעדכנו אותך.</p>'}
     </section>
+    ${S.apps.some(a=>a.status!=='saved')?funnelHtml():''}
     <button class="today glass" id="qCard" onclick="openQuestions()"></button>
     <section class="todo glass" id="todoBox" aria-label="המשימות שלי"></section>`;
-  renderQCard();renderTodo();
+  renderQCard();renderTodo();if(typeof askFromHash==='function')setTimeout(askFromHash,0);
 }
 function renderQCard(){
   const el=$('qCard');if(!el)return;const {done,total}=qProgress();
@@ -276,7 +277,7 @@ function decide(kind){
   save();lastAct={id,kind};
   setTimeout(()=>{busy=false;renderJobs();syncChrome()},340);
   if(kind==='save') toast(`${j.co} נשמרה בהגשות`,{undo:undoLast});
-  else toast('למה זה לא מתאים?',{undo:undoLast,ms:6500,chips:whyChips(id,j,'',()=>toast('הבנתי. אציג פחות משרות כאלה'))});
+  else toast('למה זה לא מתאים?',{undo:undoLast,ms:6500,chips:whyChips(id,j,'',t=>t==='לא עומד בדרישות'?askReq(id,j):toast('הבנתי. אציג פחות משרות כאלה'))});
 }
 /* סיבות לדילוג ולהסרה מההגשות (אותה רשימה). "אחר…" = טקסט חופשי קצר. נשמר בענן: דורון לומד מזה (agent_core/taste.py) */
 const WHY=['לא עומד בדרישות','בכירה מדי','לא התחום שלי','מיקום','החברה','לא מעניין'];
@@ -285,6 +286,11 @@ function skipWhy(id,j,t,x,from){S.skipReasons[id]=t;S.skip=S.skip||{};
   if(x)S.skip[id].x=x.slice(0,60);if(from)S.skip[id].from=from;
   const ks=Object.keys(S.skip);if(ks.length>150)ks.sort((a,b)=>(S.skip[a].at||'').localeCompare(S.skip[b].at||'')).slice(0,ks.length-150).forEach(k=>delete S.skip[k]);
   track(from?'remove_reason':'skip_why',{r:t});save()}
+/* "לא עומד בדרישות" → איזו דרישה (מהדרישות שהסוכן המדרג קרא מהמודעה). דורון לומד מה המשתמש לא עומד בו */
+function askReq(id,j){const rq=((j.dims||{}).req||[]).slice().sort((a,b)=>b[1]-a[1]).map(r=>r[0]).filter(Boolean).slice(0,5);
+  if(!rq.length){toast('הבנתי. אציג פחות משרות כאלה');return}
+  const pick=x=>{if(S.skip&&S.skip[id]){S.skip[id].q=String(x).slice(0,40);save()}track('skip_req');toast('תודה, דורון יבדוק את זה טוב יותר')};
+  setTimeout(()=>toast('איזו דרישה?',{ms:9000,chips:[...rq.map(t=>({t,fn:()=>pick(t)})),{t:'אחר…',other:true,fn:x=>pick(x)}]}),60)}
 function whyChips(id,j,from,done){return[...WHY.map(t=>({t,fn:()=>{skipWhy(id,j,t,'',from);done(t)}})),
   {t:'אחר…',other:true,fn:x=>{skipWhy(id,j,'אחר',x,from);done('אחר')}}]}
 function undoLast(){
