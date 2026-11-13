@@ -71,11 +71,11 @@ ENGINEER = re.compile(r"\b(engineer|developer|designer)\b|מהנדס|מתכנן"
 
 
 def hands_on_hide(card: dict, plan: dict, cv: str = "") -> bool:
-    """משרת מפעיל/טכנאי (בלי "מהנדס" בכותרת) — רק אם לפי השאלון וקורות החיים המשתמש לא מחפש תפקיד כזה:
-    לא בחר אותו (תפקידים/תפקיד אחר) ולא מופיע בקורות החיים."""
+    """משרת מפעיל/טכנאי (בלי "מהנדס" בכותרת) — יורדת אם בשאלון המשתמש לא בחר תפקיד כזה (תפקידים או "תפקיד אחר").
+    לפי השאלון בלבד: ניסיון קודם כטכנאי בקורות החיים הוא עבר, לא יעד (cv נשאר לתאימות, לא משפיע)."""
     t = card.get("title") or ""
     mine = " ".join((plan.get("titles") or []) + (plan.get("heads") or []) + (plan.get("extra_titles") or []))
-    return bool(HANDS_ON.search(t)) and not ENGINEER.search(t) and not HANDS_ON.search(mine) and not HANDS_ON.search(cv or "")
+    return bool(HANDS_ON.search(t)) and not ENGINEER.search(t) and not HANDS_ON.search(mine)
 
 
 def learn_new(rows: list[dict], skips: dict, off: list, plan: dict) -> dict:
@@ -122,7 +122,7 @@ def main(days=7):
             continue
         print(f"\n═══ משתמש #{i} | {a.get('status')} | ניסיון {a.get('exp')} | תחום {a.get('field') or a.get('domains')} | levels={plan.get('levels')} have_years={plan.get('have_years')}")
         print(f"   רצות: {searched(plan)}")
-        print(f"   לפי השאלון: תפקידים שבחר {a.get('roles') or '-'} | תפקיד אחר {a.get('custom_roles') or '-'} | מפעיל/טכנאי בקו״ח: {'כן' if HANDS_ON.search(p.get('cv_text') or '') else 'לא'}")
+        print(f"   לפי השאלון: תפקידים שבחר {a.get('roles') or '-'} | תפקיד אחר {a.get('custom_roles') or '-'} | מפעיל/טכנאי בקו״ח: {sorted({m.group(0).lower() for m in HANDS_ON.finditer(p.get('cv_text') or '')}) or 'לא'}")
         for w in audit(plan, a) or ["אין אזהרות"]:
             print(f"   {'⚠️ ' if w != 'אין אזהרות' else '✓ '}{w}")
         jobs = [j for j in get("jobs", select="id,card,fit,decision", user_id=f"eq.{uid}", created_at=f"gte.{since}") or []
